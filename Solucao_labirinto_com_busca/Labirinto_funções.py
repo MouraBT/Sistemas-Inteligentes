@@ -48,15 +48,41 @@ class Arvore:
             self.filho_esquerdo = Node_esquerdo
             self.filho_direito = Node_direito
 
+
     def __init__(self):
         #ver como faz polimorfismo ou a declaração para que raiz seja inicializado ja como Node
-        self.raiz
+        self.raiz = None
+        self.lista_visitados = []
+        self.tamanho_arvore = 0
+    #def insere_node(self):
+        #verifica se a arvore existe
+        #caso arvore vazia
+        #insere esquerda
+        #insere direita
+    #def deleta_node()
+    #def deleta_arvore(self):
+    def arvore_vazia(self):
+        if(self.raiz == None):
+            return True
+        else:
+            return False
+    def ler_node_esquerdo(self,node_atual):
+        return node_atual.filho_esquerdo
+    def ler_node_direito(self,node_atual):
+        return node_atual.filho_direito
 
-   # def criar_node(self, lado):
-   # def ler_node_esquerdo(self):
-   #def ler_node_direito(self):
-   #def deleta_node(self):
+    def procura_na_lista(self,node):
+        for i in range(0,len(self.lista_visitados)):
+            if(i == self.lista_visitados[i]):
+                return True
+        return False
 
+    def guarda_node(self, node):
+        if(self.procura_na_lista(self,node) == False):
+            self.lista_visitados.append(node)
+            return True
+        else:
+            return False
 #O agente irá herda a árvore e ela será utilizado no metodo de busca dentro do agente
 #Classe agente
 
@@ -196,15 +222,14 @@ class Agente:
             self.andar_para_baixo()
 
     def objetivo(self):
-        if self.estado_atual_x == self.posicao_objetivo_x and self.estado_atual_y == self.posicao_objetivo_y:
+        if self.posicao_atual_x == self.posicao_objetivo_x and self.posicao_atual_y == self.posicao_objetivo_y:
             return True
         else:
             return False
 
-    def busca_A(self):
-        #A raiz recebe o estado inicial
-        arvore_busca = Arvore.__init__(self.estado_inicial)
-        
+#    def busca_A(self):
+
+
 
 #função que calcula o valor euristico de cada nó
     def calcula_heuristica(self,x,y):
