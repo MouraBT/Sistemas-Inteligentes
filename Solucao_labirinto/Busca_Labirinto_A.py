@@ -72,6 +72,8 @@ class Agente:
         #listas com as posicoes visitadas
         self.lista_visitados_x = []
         self.lista_visitados_y = []
+        self.lista_visitados_x.append(self.posicao_atual_x)
+        self.lista_visitados_y.append(self.posicao_atual_y)
 
         #Variáveis para controlar Bifurcações
         self.entrada_bifurcacao_x = 0
@@ -139,7 +141,7 @@ class Agente:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
             return False
         if self.labirinto[self.posicao_atual_x][self.posicao_atual_y + 1] == 1:
-            if self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y) == True:
+            if self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y +1) == True:
                 return False
             else:
                 #print("Pode andar para direita")
@@ -149,7 +151,7 @@ class Agente:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
             return False
         if self.labirinto[self.posicao_atual_x][self.posicao_atual_y - 1] == 1:
-            if self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y) == True:
+            if self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y - 1) == True:
                 return False
             else:
                 #print("Pode andar para esquerda")
@@ -159,7 +161,7 @@ class Agente:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
             return False
         if self.labirinto[self.posicao_atual_x - 1][self.posicao_atual_y] == 1:
-            if self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y) == True:
+            if self.busca_lista_visitados(self.posicao_atual_x - 1, self.posicao_atual_y) == True:
                 return False
             else:
                 #print("Pode andar para cima")
@@ -169,7 +171,7 @@ class Agente:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
             return False
         if self.labirinto[self.posicao_atual_x + 1][self.posicao_atual_y] == 1:
-            if self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y) == True:
+            if self.busca_lista_visitados(self.posicao_atual_x + 1, self.posicao_atual_y) == True:
                 return False
             else:
                 #print("Pode andar para baixo")
@@ -182,24 +184,30 @@ class Agente:
     #Os outros valores indicam quanto caminho ele pode seguir
     #Retorna a quantida de caminhos
     def verifica_todos_os_lados(self):
+        if len(self.caminho_possiveis) != 0:
+            self.caminho_possiveis.clear()
 
         if self.verifica_direita() == True:
-            valor_h = self.calcula_heuristica(self.posicao_atual_x, self.posicao_atual_y + 1)
+            y = self.posicao_atual_y + 1
+            valor_h = self.calcula_heuristica(self.posicao_atual_x, y)
             decisao = [valor_h, 1]
             self.insere_ordenado(decisao)
 
         if self.verifica_esquerda() == True:
-            valor_h = self.calcula_heuristica(self.posicao_atual_x, self.posicao_atual_y - 1)
+            y = self.posicao_atual_y - 1
+            valor_h = self.calcula_heuristica(self.posicao_atual_x, y)
             decisao = [valor_h, 2]
             self.insere_ordenado(decisao)
 
         if self.verifica_em_cima() == True:
-            valor_h = self.calcula_heuristica(self.posicao_atual_x - 1, self.posicao_atual_y)
+            x = self.posicao_atual_x - 1
+            valor_h = self.calcula_heuristica(x, self.posicao_atual_y)
             decisao = [valor_h, 3]
             self.insere_ordenado(decisao)
 
         if self.verifica_em_baixo() == True:
-            valor_h = self.calcula_heuristica(self.posicao_atual_x+ 1, self.posicao_atual_y)
+            x = self.posicao_atual_x + 1
+            valor_h = self.calcula_heuristica(x, self.posicao_atual_y)
             decisao = [valor_h, 4]
             self.insere_ordenado(decisao)
 
