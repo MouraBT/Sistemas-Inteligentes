@@ -26,6 +26,9 @@ def cria_labirinto():
         matriz_labirinto[6][i] = 1
     for i in range(5, 7):
         matriz_labirinto[9][i] = 1
+    for i in range(7, 10):
+        matriz_labirinto[i][3] = 1
+
     return matriz_labirinto
     # imprime matriz
 
@@ -34,7 +37,12 @@ def imprime_matriz(matriz):
     print(np.matrix(matriz))
     print('\n')
     # cria um labirinto estático
-
+class Node:
+    def __init__(self, x, y, decisao, valor_heuristico):
+        self.pos_x = x
+        self.pos_y = y
+        self.decisao = decisao
+        self.distancia = valor_heuristico
 #Classe agente
 
 class Agente:
@@ -75,8 +83,7 @@ class Agente:
         self.calcula_custo_total()
 
         #listas com as posicoes visitadas
-        self.lista_visitados_x = []
-        self.lista_visitados_y = []
+        self.lista_visitados = []
     #Função que localiza a posição atual do agente
     def localiza_agente(self):
         for i in range(10):
@@ -201,14 +208,36 @@ class Agente:
         if self.labirinto[self.posicao_atual_x +1][self.posicao_atual_y] == 0:
             #print("OPS! Parede")
             return 0
-    def busca_lista_visitados(self,x,y):
-        for i in range(len(self.lista_visitados_x)):
-            if self.lista_visitados_x[i] == x and self.lista_visitados_y[i] == y:
+    def verifica_tudo(self):
+        possiveis_caminhos = Fila_de_prioridade
+        if self.verifica_direita() == 1:
+            self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y + 1) == False;
+            possiveis_caminhos.append(self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y + 1])
+        if self.verifica_esquerda() == 1:
+            self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y - 1) == False;
+            possiveis_caminhos.append(self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y - 1])
+        if self.verifica_em_cima() == 1:
+            self.busca_lista_visitados(self.posicao_atual_x -1, self.posicao_atual_y) == False;
+            possiveis_caminhos.append(self.matriz_de_custos[self.posicao_atual_x - 1][self.posicao_atual_y])
+        if self.verifica_em_baixo() == 1:
+            self.busca_lista_visitados(self.posicao_atual_x + 1, self.posicao_atual_y) == False;
+            possiveis_caminhos.append(self.matriz_de_custos[self.posicao_atual_x + 1][self.posicao_atual_y])
+        return possiveis_caminhos
+
+    def busca_lista_visitados(self,node):
+        for i in range(len(self.lista_visitados)):
+            if self.lista_visitados == node:
+
                 print("já Visitou esse lugar, procure outro!")
-                return True
-        self.lista_visitados_x.append(x)
-        self.lista_visitados_y.append(y)
-        return False
+                return node
+            else:
+       # self.lista_visitados_x.append(x)
+       # self.lista_visitados_y.append(y)
+                return False
+
+
+
+
 
 #Nessa função ele utiliza as funções de verificação. Primeiro ele verifica a direita se o caminho estiver livre ele verifica a matriz de custos
 #e atribui o variável maior e decisao = 1. Se esquerda estiver livre e o valor da matriz de custos for maior que a variável  maior
@@ -219,33 +248,12 @@ class Agente:
 # decisao = 2 move para esquerda
 # decisao = 3 move para emcima
 # decisao = 4 move para baixo
-    def resultado(self):
-        menor = 0
-        decisao = 0
-        if self.verifica_direita() == 1 and self.busca_lista_visitados(self.posicao_atual_x,self.posicao_atual_y + 1) == False:
-            menor = self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y + 1]
-            decisao = 1
+ #   def resultado(self):
 
-        if self.verifica_esquerda() == 1 and self.busca_lista_visitados(self.posicao_atual_x, self.posicao_atual_y - 1) == False:
-           if self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y - 1] < menor or menor == 0:
-                menor = self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y - 1]
-                decisao = 2
 
-        if self.verifica_em_cima() == 1 and self.busca_lista_visitados(self.posicao_atual_x -1, self.posicao_atual_y) == False:
-            if self.matriz_de_custos[self.posicao_atual_x -1][self.posicao_atual_y] < menor or menor == 0:
-                menor = self.matriz_de_custos[self.posicao_atual_x - 1][self.posicao_atual_y]
-                decisao = 3
-
-        if self.verifica_em_baixo() == 1 and self.busca_lista_visitados(self.posicao_atual_x + 1, self.posicao_atual_y) == False:
-            if self.matriz_de_custos[self.posicao_atual_x + 1][self.posicao_atual_y] < menor or menor == 0:
-                menor = self.matriz_de_custos[self.posicao_atual_x + 1][self.posicao_atual_y]
-                decisao = 4
-        print(decisao)
-        self.movimenta(decisao)
 
     def movimenta(self, decisao):
         if decisao == 1:
-            print()
             self.andar_para_direita()
         if decisao == 2:
             self.andar_para_esquerda()
@@ -260,18 +268,18 @@ class Agente:
         else:
             return False
 
-    def busca_A(self,resultado):
-        max_iteracoes = 100
-        contador = 0
-        if contador == max_iteracoes:
-            return ValueError
-        else:
-            contador = contador + 1
-        if self.verifica_direita() == 3 or self.verifica_esquerda() == 3 or self.verifica_em_cima() == 3 or self.verifica_em_baixo() == 3:
-            print("Você saiu do labirinto")
-            return
-        else:
-            return self.busca_A(self.resultado())
+ #   def busca_A(self,resultado):
+ #       max_iteracoes = 100
+ #       contador = 0
+ #       if contador == max_iteracoes:
+ #           return ValueError
+ #       else:
+  #          contador = contador + 1
+   #     if self.verifica_direita() == 3 or self.verifica_esquerda() == 3 or self.verifica_em_cima() == 3 or self.verifica_em_baixo() == 3:
+    #        print("Você saiu do labirinto")
+     #       return
+      #  else:
+       #     return self.busca_A(self.resultado())
 
 #função que calcula o valor euristico de cada nó
     def calcula_heuristica(self,x,y):
@@ -294,7 +302,7 @@ class Agente:
             for j in range(10):
                 if self.labirinto[i][j] == 1:
                     custo_heuristico = self.calcula_heuristica(i, j)
-                    # custo_uniforme = custo_uniforme + 1
-                    self.matriz_de_custos[i][j] = custo_heuristico #+ custo_uniforme
+                    #chama
+                    self.matriz_de_custos[i][j] = custo_heuristico
         print("Matriz de custo")
         imprime_matriz(self.matriz_de_custos)
