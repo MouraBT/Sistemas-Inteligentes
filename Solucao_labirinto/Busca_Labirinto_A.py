@@ -1,4 +1,3 @@
-import queue as fila
 import numpy as np
 
 ######################Funções Do Labirinto###################################################
@@ -27,8 +26,8 @@ def cria_labirinto():
         matriz_labirinto[6][i] = 1
     for i in range(5, 7):
         matriz_labirinto[9][i] = 1
-    for i in range(7, 10):
-        matriz_labirinto[i][3] = 1
+    #for i in range(7, 10):
+    #    matriz_labirinto[i][3] = 1
 
     return matriz_labirinto
     # imprime matriz
@@ -133,11 +132,11 @@ class Agente:
  #           return False
 
     #Verificações se pode andar para os lados
-    # Primeiro verifica se pode é um espaço andável ou parede.
+    # Primeiro verifica se pode é um espaço andável ou parede ou o objetivo.
     # Depois verifica se já visitou esse lugar
     # Retorna:
     # False Se não puder andar
-    # True  Se puder andar
+    # True  Se puder andar(quando a valor da posição do labirinto é 1 ou 3)
 
     def verifica_direita(self):
         if self.posicao_atual_y == 9:
@@ -188,21 +187,25 @@ class Agente:
                 return True
         if self.labirinto[self.posicao_atual_x + 1][self.posicao_atual_y] == 3:
             return True
+
     #Função que verifica os caminhos possíveis
-    #Verifica todos os lados e soma 1 se puder andar
-    #Essa função verifica se é uma bifucação e se ele esta em um caminho sem saida
-    #Se qtd_caminhos_possiveis = 0 não tem para onde andar vai ter que voltar para a bifurcação e explorar outro caminho
-    #Os outros valores indicam quanto caminho ele pode seguir
-    #Retorna a quantida de caminhos
+    #Verifica todos os lados se puder andar adiciona na lista ordenada do memor para o maior valor heuristico
+    #de caminho possiveis e coma decisao:
+    #EX: caminhos_possiveis = [[5,1], [9,4]] o agente pode andar para direita(1) e baixo(4) os valores heuristico
+    #são respectivamente 5 e 9.
+    #O tamanho da lista vai indicar quantos caminho eu posso seguir.
     def verifica_todos_os_lados(self):
+        #limpa a lista de caminhos possiveis a cada nova verificação
         if len(self.caminho_possiveis) != 0:
             self.caminho_possiveis.clear()
 
+        #verifica Todos os lados
         direita = self.verifica_direita()
         esquerda = self.verifica_esquerda()
         em_cima = self.verifica_em_cima()
         em_baixo= self.verifica_em_baixo()
 
+        #Se ele puder mover o valor sera verdadeiro, a heuristica será calculada e acrescenta no caminhos possiveis
         if direita == True:
             valor_h = self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y + 1]
             decisao = [valor_h, 1]
@@ -223,16 +226,19 @@ class Agente:
             decisao = [valor_h, 4]
             self.insere_ordenado(decisao)
 
-        if self.caminho_possiveis[0][0] == 0:
-            self.chegou_objetivo = self.valor_objetivo
+        #Se existe algum caminho possivel e um deles tem heuristica 0 quer dizer que atingiu o objetivo(basta andar para onde é 0)
+        if len(self.caminho_possiveis) != 0:
+            if self.caminho_possiveis[0][0] == 0:
+                self.chegou_objetivo = self.valor_objetivo
 
 
 
 #####################Funções Para movimentar o Agente#################################
-    # A funções andar movem o agente para o respectivo lad.
+    # A funções andar movem o agente para o respectivo lad0.
     # Onde que ele esta passa a ser 1 e atualiza a posição atual que passa a ser 2
     # Adiciona na Lista de visitados
     # Retorna False se não consegui andar e True se conseguiu
+
 
     def andar_para_direita(self):
 
@@ -338,6 +344,7 @@ class Agente:
             self.andar_para_baixo()
 
 ##################### Funções Para Busca A* #################################
+
     #Função que calcula a distância para o objetivo
     def calcula_heuristica(self, x, y):
         distancia_x = self.posicao_objetivo_x - x
@@ -358,6 +365,7 @@ class Agente:
             self.verifica_todos_os_lados()
 
             #Condição de um unico caminho
+            #O agente fica no loop até achar uma bifurcação
             while len(self.caminho_possiveis) == 1 and self.chegou_objetivo == 0:
                 if not self.na_bifurcacao:
                     #Decisao do caminho e colocou na fila de caminho final
@@ -368,7 +376,9 @@ class Agente:
 
                 self.movimenta(self.caminho_possiveis[0][1])
                 self.verifica_todos_os_lados()
-
+            #Caso que esta na bifurcação e escolhe um caminho
+            #A partir dai os valores serão colocados em uma lista temporaria, para caso ele atingir um ponto
+            #em que o agente não pode andar para mais nenhum lado poder voltar
             if len(self.caminho_possiveis) > 1:
                 self.entrada_bifurcacao_x = self.posicao_atual_x
                 self.entrada_bifurcacao_y = self.posicao_atual_y
@@ -376,14 +386,17 @@ class Agente:
                 self.movimenta(self.caminho_possiveis[0][1])
                 self.fila_temp.append(self.caminho_possiveis[0][1])
 
+            #Chegou no objetivo.
             if self.chegou_objetivo == 3:
                 i = 0
+                #Coloca a lista  temporaria na final para ter os passos do Agente
                 while len(self.fila_temp) != 0:
                     self.fila_final.append(self.fila_temp[0])
                     self.fila_temp.pop(0)
                     i += 1
 
-
+            #O agente está preso e então o valor atual recebe o da ultima bifurcação
+            #e limpa a ista temporaria
             if len(self.caminho_possiveis) == 0:
                 #volta para a bifurcacao
                 self.posicao_atual_x = self.entrada_bifurcacao_x
