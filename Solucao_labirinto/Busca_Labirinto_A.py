@@ -68,6 +68,7 @@ class Agente:
         #Cria uma matriz para colocar o valor dos custos
         self.matriz_de_custos = []
         self.inicializa_matriz_de_custos()
+        self.calcula_custo_total()
 
         #listas com as posicoes visitadas
         self.lista_visitados_x = []
@@ -91,6 +92,8 @@ class Agente:
         #Variavel de controle se ele esta tentando um caminho da bifurcação
         self.na_bifurcacao = False
 
+        #varialve de controle se chegou no objetivo
+        self.chegou_objetivo = 0
 ######################Funções de Localização############################################
     #Função que localiza a posição atual do agente
     def localiza_agente(self):
@@ -119,15 +122,15 @@ class Agente:
             if self.lista_visitados_x[i] == x and self.lista_visitados_y[i] == y:
                 #print("já Visitou esse lugar, procure outro!")
                 return True
-            else:
-                return False
+
+        return False
 
     #Verifica Se chegou no objetivo
-    def se_objetivo(self):
-        if self.posicao_atual_x == self.posicao_objetivo_x and self.posicao_atual_y == self.posicao_objetivo_y:
-            return True
-        else:
-            return False
+ #   def se_objetivo(self):
+ #       if self.posicao_atual_x == self.posicao_objetivo_x and self.posicao_atual_y == self.posicao_objetivo_y:
+ #           return True
+ #       else:
+ #           return False
 
     #Verificações se pode andar para os lados
     # Primeiro verifica se pode é um espaço andável ou parede.
@@ -146,6 +149,9 @@ class Agente:
             else:
                 #print("Pode andar para direita")
                 return True
+        if self.labirinto[self.posicao_atual_x][self.posicao_atual_y + 1] == 3:
+            return True
+
     def verifica_esquerda(self):
         if self.posicao_atual_y == 0:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
@@ -156,6 +162,8 @@ class Agente:
             else:
                 #print("Pode andar para esquerda")
                 return True
+        if self.labirinto[self.posicao_atual_x][self.posicao_atual_y - 1] == 3:
+            return True
     def verifica_em_cima(self):
         if self.posicao_atual_x == 0:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
@@ -166,6 +174,8 @@ class Agente:
             else:
                 #print("Pode andar para cima")
                 return True
+        if self.labirinto[self.posicao_atual_x - 1][self.posicao_atual_y] == 3:
+            return True
     def verifica_em_baixo(self):
         if self.posicao_atual_x == 9:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
@@ -176,7 +186,8 @@ class Agente:
             else:
                 #print("Pode andar para baixo")
                 return True
-
+        if self.labirinto[self.posicao_atual_x + 1][self.posicao_atual_y] == 3:
+            return True
     #Função que verifica os caminhos possíveis
     #Verifica todos os lados e soma 1 se puder andar
     #Essa função verifica se é uma bifucação e se ele esta em um caminho sem saida
@@ -187,29 +198,35 @@ class Agente:
         if len(self.caminho_possiveis) != 0:
             self.caminho_possiveis.clear()
 
-        if self.verifica_direita() == True:
-            y = self.posicao_atual_y + 1
-            valor_h = self.calcula_heuristica(self.posicao_atual_x, y)
+        direita = self.verifica_direita()
+        esquerda = self.verifica_esquerda()
+        em_cima = self.verifica_em_cima()
+        em_baixo= self.verifica_em_baixo()
+
+        if direita == True:
+            valor_h = self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y + 1]
             decisao = [valor_h, 1]
             self.insere_ordenado(decisao)
 
-        if self.verifica_esquerda() == True:
-            y = self.posicao_atual_y - 1
-            valor_h = self.calcula_heuristica(self.posicao_atual_x, y)
+        if esquerda == True:
+            valor_h = self.matriz_de_custos[self.posicao_atual_x][self.posicao_atual_y - 1]
             decisao = [valor_h, 2]
             self.insere_ordenado(decisao)
 
-        if self.verifica_em_cima() == True:
-            x = self.posicao_atual_x - 1
-            valor_h = self.calcula_heuristica(x, self.posicao_atual_y)
+        if em_cima == True:
+            valor_h = self.matriz_de_custos[self.posicao_atual_x - 1][self.posicao_atual_y]
             decisao = [valor_h, 3]
             self.insere_ordenado(decisao)
 
-        if self.verifica_em_baixo() == True:
-            x = self.posicao_atual_x + 1
-            valor_h = self.calcula_heuristica(x, self.posicao_atual_y)
+        if em_baixo == True:
+            valor_h = self.matriz_de_custos[self.posicao_atual_x + 1][self.posicao_atual_y]
             decisao = [valor_h, 4]
             self.insere_ordenado(decisao)
+
+        if self.caminho_possiveis[0][0] == 0:
+            self.chegou_objetivo = self.valor_objetivo
+
+
 
 #####################Funções Para movimentar o Agente#################################
     # A funções andar movem o agente para o respectivo lad.
@@ -323,21 +340,25 @@ class Agente:
 ##################### Funções Para Busca A* #################################
     #Função que calcula a distância para o objetivo
     def calcula_heuristica(self, x, y):
-
-        distancia_x = abs(self.posicao_objetivo_x - x)
-        distancia_y = abs(self.posicao_objetivo_y - y)
+        distancia_x = self.posicao_objetivo_x - x
+        if distancia_x < 0:
+            distancia_x = distancia_x * -1
+        distancia_y = self.posicao_objetivo_y - y
+        if distancia_y < 0:
+            distancia_y = distancia_y * -1
         distancia_heuristica = distancia_x + distancia_y
-
+        if distancia_heuristica < 0:
+            distancia_heuristica = distancia_heuristica * -1
         return distancia_heuristica
 
     #Função Busca A*
     def busca_caminho(self):
-        while not self.se_objetivo():
+        while self.chegou_objetivo == 0:
             #Verificação se pode andar
             self.verifica_todos_os_lados()
 
             #Condição de um unico caminho
-            while len(self.caminho_possiveis) == 1:
+            while len(self.caminho_possiveis) == 1 and self.chegou_objetivo == 0:
                 if not self.na_bifurcacao:
                     #Decisao do caminho e colocou na fila de caminho final
                     self.fila_final.append(self.caminho_possiveis[0][1])
@@ -355,13 +376,13 @@ class Agente:
                 self.movimenta(self.caminho_possiveis[0][1])
                 self.fila_temp.append(self.caminho_possiveis[0][1])
 
-            if self.se_objetivo():
+            if self.chegou_objetivo == 3:
                 i = 0
                 while len(self.fila_temp) != 0:
-                    self.fila_final.append(self.fila_temp[i])
-                    self.fila_temp.pop(i)
+                    self.fila_final.append(self.fila_temp[0])
+                    self.fila_temp.pop(0)
                     i += 1
-                return True
+
 
             if len(self.caminho_possiveis) == 0:
                 #volta para a bifurcacao
@@ -372,6 +393,8 @@ class Agente:
                 self.fila_temp.clear()
                 self.na_bifurcacao = False
 
+        self.movimenta(self.caminho_possiveis[0][1])
+        print("Parabéns! Você saiu do labirinto")
 
 
 
@@ -390,9 +413,23 @@ class Agente:
             self.caminho_possiveis.append(valor)
         else:
             i = 0
-            menor = self.caminho_possiveis[0][0]
-            while valor[0] > menor:
+            #menor = self.caminho_possiveis[0][0]
+            while valor[0] >= self.caminho_possiveis[i][0]:
                 i += 1
-                menor = self.caminho_possiveis[i][0]
+                if i >= len(self.caminho_possiveis):
+                    break
+               # menor = self.caminho_possiveis[i][0]
             self.caminho_possiveis.insert(i, valor)
         print("caminhos possiveis", self.caminho_possiveis)
+
+    #Calcula o valor heuristico de cada posicao que eu posso anda
+    def calcula_custo_total(self):
+        # custo_uniforme = 0
+        for i in range(10):
+            for j in range(10):
+                if self.labirinto[i][j] == 1:
+                    custo_heuristico = self.calcula_heuristica(i, j)
+                    # chama
+                    self.matriz_de_custos[i][j] = custo_heuristico
+        print("Matriz de custo")
+        imprime_matriz(self.matriz_de_custos)

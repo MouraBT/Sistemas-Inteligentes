@@ -1,5 +1,5 @@
 import Busca_Labirinto_A as LF
-import queue as f
+
 
 
 labirinto = LF.cria_labirinto()
