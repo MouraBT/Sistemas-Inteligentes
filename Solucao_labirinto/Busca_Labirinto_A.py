@@ -22,7 +22,7 @@ def cria_labirinto():
         matriz_labirinto[i][3] = 1
     for i in range(3, 7):
         matriz_labirinto[i][5] = 1
-    for i in range(2, 6):
+    for i in range(3, 6):
         matriz_labirinto[6][i] = 1
     for i in range(5, 7):
         matriz_labirinto[9][i] = 1
@@ -163,6 +163,7 @@ class Agente:
                 return True
         if self.labirinto[self.posicao_atual_x][self.posicao_atual_y - 1] == 3:
             return True
+
     def verifica_em_cima(self):
         if self.posicao_atual_x == 0:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
@@ -175,6 +176,7 @@ class Agente:
                 return True
         if self.labirinto[self.posicao_atual_x - 1][self.posicao_atual_y] == 3:
             return True
+
     def verifica_em_baixo(self):
         if self.posicao_atual_x == 9:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
@@ -347,15 +349,11 @@ class Agente:
 
     #Função que calcula a distância para o objetivo
     def calcula_heuristica(self, x, y):
-        distancia_x = self.posicao_objetivo_x - x
-        if distancia_x < 0:
-            distancia_x = distancia_x * -1
-        distancia_y = self.posicao_objetivo_y - y
-        if distancia_y < 0:
-            distancia_y = distancia_y * -1
+        
+        distancia_x = abs(self.posicao_objetivo_x - x)
+        distancia_y = abs(self.posicao_objetivo_y - y)
         distancia_heuristica = distancia_x + distancia_y
-        if distancia_heuristica < 0:
-            distancia_heuristica = distancia_heuristica * -1
+
         return distancia_heuristica
 
     #Função Busca A*
