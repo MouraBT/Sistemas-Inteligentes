@@ -1,5 +1,5 @@
 import numpy as np
-
+from queue import PriorityQueue
 ######################Funções Do Labirinto###################################################
 #Cria Labirinto
 def cria_labirinto():
@@ -12,20 +12,35 @@ def cria_labirinto():
         matriz_labirinto.append(linha)
     matriz_labirinto[0][0] = 2
     matriz_labirinto[9][4] = 3
-    for i in range(1, 4):
+    for i in range(1, 3):
         matriz_labirinto[i][0] = 1
     for i in range(1, 8):
-        matriz_labirinto[3][i] = 1
-    for i in range(4, 10):
+        matriz_labirinto[2][i] = 1
+    for i in range(3, 8):
         matriz_labirinto[i][7] = 1
     for i in range(3, 7):
         matriz_labirinto[i][3] = 1
     for i in range(3, 7):
         matriz_labirinto[i][5] = 1
-    for i in range(3, 6):
+    for i in range(1, 6):
         matriz_labirinto[6][i] = 1
+    for i in range(6, 7):
+        matriz_labirinto[i][2] = 1
     for i in range(5, 7):
         matriz_labirinto[9][i] = 1
+    for i in range(6, 8):
+        matriz_labirinto[i][2] = 1
+    for i in range(8, 10):
+        matriz_labirinto[6][i] = 1
+    for i in range(7, 10):
+        matriz_labirinto[9][i] = 1
+    for i in range(7,10):
+        matriz_labirinto[i][9] = 1
+    matriz_labirinto[7][6] = 1
+    matriz_labirinto[7][2] = 0
+    matriz_labirinto[7][3] = 1
+
+    #matriz_labirinto[3][1] = 2
     #for i in range(7, 10):
     #    matriz_labirinto[i][3] = 1
 
@@ -79,6 +94,7 @@ class Agente:
         self.entrada_bifurcacao_x = 0
         self.entrada_bifurcacao_y = 0
 
+        self.fila_de_bifurcacao = PriorityQueue()
         #Lista movimentos finais
         self.fila_final = []
 
@@ -86,7 +102,7 @@ class Agente:
         self.fila_temp = []
 
         #Fila dos caminhos da bifuracação com os valores heuristicos
-        self. caminho_possiveis = []
+        self.caminho_possiveis = []
 
         #Variavel de controle se ele esta tentando um caminho da bifurcação
         self.na_bifurcacao = False
@@ -150,6 +166,7 @@ class Agente:
                 return True
         if self.labirinto[self.posicao_atual_x][self.posicao_atual_y + 1] == 3:
             return True
+        return False
 
     def verifica_esquerda(self):
         if self.posicao_atual_y == 0:
@@ -163,7 +180,7 @@ class Agente:
                 return True
         if self.labirinto[self.posicao_atual_x][self.posicao_atual_y - 1] == 3:
             return True
-
+        return False
     def verifica_em_cima(self):
         if self.posicao_atual_x == 0:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
@@ -176,7 +193,7 @@ class Agente:
                 return True
         if self.labirinto[self.posicao_atual_x - 1][self.posicao_atual_y] == 3:
             return True
-
+        return False
     def verifica_em_baixo(self):
         if self.posicao_atual_x == 9:
             #print("Cuidado! Vcê atingiu o limite do labirinto")
@@ -189,6 +206,7 @@ class Agente:
                 return True
         if self.labirinto[self.posicao_atual_x + 1][self.posicao_atual_y] == 3:
             return True
+        return False
 
     #Função que verifica os caminhos possíveis
     #Verifica todos os lados se puder andar adiciona na lista ordenada do memor para o maior valor heuristico
@@ -205,7 +223,7 @@ class Agente:
         direita = self.verifica_direita()
         esquerda = self.verifica_esquerda()
         em_cima = self.verifica_em_cima()
-        em_baixo= self.verifica_em_baixo()
+        em_baixo = self.verifica_em_baixo()
 
         #Se ele puder mover o valor sera verdadeiro, a heuristica será calculada e acrescenta no caminhos possiveis
         if direita == True:
@@ -232,6 +250,12 @@ class Agente:
         if len(self.caminho_possiveis) != 0:
             if self.caminho_possiveis[0][0] == 0:
                 self.chegou_objetivo = self.valor_objetivo
+
+        if len(self.caminho_possiveis) == 0:
+            if self.fila_de_bifurcacao.empty():
+                print("Impossivel sair do labirinto")
+                return ValueError
+        return
 
 
 
@@ -349,18 +373,46 @@ class Agente:
 
     #Função que calcula a distância para o objetivo
     def calcula_heuristica(self, x, y):
-        
-        distancia_x = abs(self.posicao_objetivo_x - x)
-        distancia_y = abs(self.posicao_objetivo_y - y)
+        distancia_x = self.posicao_objetivo_x - x
+        if distancia_x < 0:
+            distancia_x = distancia_x * -1
+        distancia_y = self.posicao_objetivo_y - y
+        if distancia_y < 0:
+            distancia_y = distancia_y * -1
         distancia_heuristica = distancia_x + distancia_y
-
+        if distancia_heuristica < 0:
+            distancia_heuristica = distancia_heuristica * -1
         return distancia_heuristica
+
+    def armazena_bifurcacao(self):
+
+        aux_x = []
+        aux_y = []
+
+        if self.fila_de_bifurcacao.qsize() == 0:
+            self.fila_de_bifurcacao.put((0, self.entrada_bifurcacao_x, self.entrada_bifurcacao_y))
+            return
+
+        if self.fila_de_bifurcacao.qsize() > 0:
+
+            for i in range(self.fila_de_bifurcacao.qsize()):
+                aux = (self.fila_de_bifurcacao.get())
+                aux_x.append(aux[1])
+                aux_y.append(aux[2])
+
+            self.fila_de_bifurcacao.put((0, self.entrada_bifurcacao_x, self.entrada_bifurcacao_y))
+
+            for j in range(len(aux_y)):
+                self.fila_de_bifurcacao.put((self.fila_de_bifurcacao.qsize(), aux_x[j], aux_y[j]))
+            return
 
     #Função Busca A*
     def busca_caminho(self):
         while self.chegou_objetivo == 0:
             #Verificação se pode andar
-            self.verifica_todos_os_lados()
+            check = self.verifica_todos_os_lados()
+            if check == ValueError:
+                return
 
             #Condição de um unico caminho
             #O agente fica no loop até achar uma bifurcação
@@ -370,7 +422,8 @@ class Agente:
                     self.fila_final.append(self.caminho_possiveis[0][1])
 
                 else:
-                    self.fila_temp.append(self.caminho_possiveis[0][1])
+                    self.fila_temp.append((self.caminho_possiveis[0][1], self.fila_de_bifurcacao.qsize()))
+
 
                 self.movimenta(self.caminho_possiveis[0][1])
                 self.verifica_todos_os_lados()
@@ -380,32 +433,48 @@ class Agente:
             if len(self.caminho_possiveis) > 1:
                 self.entrada_bifurcacao_x = self.posicao_atual_x
                 self.entrada_bifurcacao_y = self.posicao_atual_y
+                self.armazena_bifurcacao()
                 self.na_bifurcacao = True
                 self.movimenta(self.caminho_possiveis[0][1])
-                self.fila_temp.append(self.caminho_possiveis[0][1])
+                self.fila_temp.append((self.caminho_possiveis[0][1], self.fila_de_bifurcacao.qsize()))
+
 
             #Chegou no objetivo.
             if self.chegou_objetivo == 3:
                 i = 0
-                #Coloca a lista  temporaria na final para ter os passos do Agente
+            #     #Coloca a lista  temporaria na final para ter os passos do Agente
                 while len(self.fila_temp) != 0:
-                    self.fila_final.append(self.fila_temp[0])
+                    self.fila_final.append(self.fila_temp[0][0])
                     self.fila_temp.pop(0)
                     i += 1
+
 
             #O agente está preso e então o valor atual recebe o da ultima bifurcação
             #e limpa a ista temporaria
             if len(self.caminho_possiveis) == 0:
                 #volta para a bifurcacao
+                self.labirinto[self.posicao_atual_x][self.posicao_atual_y] = 1
                 self.posicao_atual_x = self.entrada_bifurcacao_x
                 self.posicao_atual_y = self.entrada_bifurcacao_y
 
-                #limpa fila temporaria
-                self.fila_temp.clear()
-                self.na_bifurcacao = False
+                aux = self.fila_de_bifurcacao.get()
+                self.posicao_atual_x = aux[1]
+                self.posicao_atual_y = aux[2]
+
+                #limpa fila temporaria até a ultima bifurcacao
+                aux_fila_tmp = len(self.fila_temp)
+                aux_tam_fila = self.fila_de_bifurcacao.qsize() + 1
+                while self.fila_temp[aux_fila_tmp-1][1] == aux_tam_fila:
+                    self.fila_temp.pop()
+                    aux_fila_tmp = len(self.fila_temp)
+
+                if self.fila_de_bifurcacao.empty(): #se ainda tiver bifurcacoes pra explorar
+                    self.na_bifurcacao = False
 
         self.movimenta(self.caminho_possiveis[0][1])
+        self.fila_final.append(self.caminho_possiveis[0][1])
         print("Parabéns! Você saiu do labirinto")
+        print(self.fila_final)
 
 
 
