@@ -13,7 +13,7 @@ class Gerador(Agent):
     while a == 0:
         a = random.randint(-100, 100)
     y = -1 * (a * x)
-    b = -1*(a*x**2)
+    b = 1*(a*x**2)
 
     b1 = random.randint(-1000, 1000)
     c= (-x**3 -(a-b1)*x**2 + a*b1*x)/(-x**2-a*x+b1*x+a*b1)
