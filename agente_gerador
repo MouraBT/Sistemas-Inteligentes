@@ -7,13 +7,13 @@ import random
  
 
 class Gerador(Agent):
-    grau =  random.randint(0,4)
+    grau =  3#random.randint(0,4)
     x = random.randint(-1000, 1000)
     a = 0
     while a == 0:
         a = random.randint(-100, 100)
     y = -1 * (a * x)
-    b = 1*(a*x**2)
+    b = -1*(a*x**2)
 
     b1 = random.randint(-1000, 1000)
     c= (-x**3 -(a-b1)*x**2 + a*b1*x)/(-x**2-a*x+b1*x+a*b1)
@@ -35,7 +35,7 @@ class Gerador(Agent):
             res = await self.receive(timeout=5)
             if res:
                 x = float(res.body)
-                x = float(Gerador.a*x**2 - Gerador.b)
+                x = float(Gerador.a*x**2 + Gerador.b)
                 print("Enviou para " + str(res.sender) + " f(", res.body, ")= ", x, "=>", int(x))
                 msg = Message(to=str(res.sender))
                 msg.set_metadata("performative", "inform")
@@ -62,7 +62,7 @@ class Gerador(Agent):
             res = await self.receive(timeout=5)
             if res:
                 x = float(res.body)
-                x = float(-0,2*(Gerador.a+x)(Gerador.b1-x)(Gerador.c-x))
+                x = float((Gerador.a+x)*(Gerador.b1-x)(Gerador.c-x))
                 print("Enviou para " + str(res.sender) + " f(", res.body, ")= ", x, "=>", int(x))
                 msg = Message(to=str(res.sender))
                 msg.set_metadata("performative", "inform")
@@ -95,3 +95,4 @@ class Gerador(Agent):
 gerador = Gerador("t_si@jix.im", "203055")
 gerador.web.start(hostname="150.162.217.81", port="10000")
 gerador.start()
+
